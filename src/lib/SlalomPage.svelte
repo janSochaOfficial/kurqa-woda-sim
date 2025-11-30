@@ -1,32 +1,27 @@
 <script lang="ts">
+  import { CHECKPOINT_RADIUS } from "./sim/consts";
+  import { SLALOM_START_DATA } from "./sim/data_sets/slalom_data";
   import type { dataType } from "./sim/dataType";
   import { frame } from "./sim/frame";
   import { handleBuoysCollision } from "./sim/handleBuoysCollision";
   import { type userInputs } from "./sim/userInputs";
 
-  const data = $state<dataType>({
-    boat: {
-      x: 200,
-      y: 250,
-      angle: 0,
-      speed: {
-        x: 0,
-        y: 0,
-      },
-    },
-    stop: false,
-    buoys: [
-      { x: 200, y: 200 },
-      { x: 400, y: 200 },
-      { x: 600, y: 200 },
-      { x: 800, y: 200 },
-    ],
-  });
+  const data = $state<dataType>(SLALOM_START_DATA);
+  const drawing = $state(data.drawing);
 
   const currentUserInputs = $state<userInputs>({
     acceleration: 0, // Changed default to 0 so it waits for input
     left: false,
     right: false,
+  });
+  let fieldContainer: HTMLDivElement | null = null;
+  $effect(() => {
+    if (fieldContainer) {
+      data.fieldSize = {
+        width: fieldContainer.clientWidth,
+        height: fieldContainer.clientHeight,
+      };
+    }
   });
 
   // Handle key presses (Active state)
@@ -79,43 +74,75 @@
       Navigate through the gates as quickly as possible!
     </p>
     <div
+      bind:this={fieldContainer}
       class="relative w-full h-[600px] bg-blue-100 border-2 border-blue-400 rounded overflow-hidden shadow-inner"
     >
-      {#each data.buoys || [] as buoy, i}
+      {#if !data.startTime}
+        <div
+          class="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 z-10"
+        >
+          <h3 class="text-2xl font-bold text-gray-800 mb-4">Get Ready!</h3>
+          <button
+            onclick={() => {
+              data.startTime = performance.now();
+            }}
+            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+          >
+            Start Slalom
+          </button>
+        </div>
+      {/if}
+      {#each drawing.buoys || [] as buoy, i}
         {@const colorClass = i % 2 === 0 ? "bg-green-500" : "bg-red-500"}
 
         <div
           class="absolute top-0 left-0 will-change-transform w-3 h-3 rounded-full border-2 border-black {colorClass} "
           style="transform-origin: center;
-      transform: translate({buoy.x - 2}px, {buoy.y - 2}px);"
+      transform: translate({buoy.x - 6}px, {buoy.y - 6}px);"
         ></div>
       {/each}
-      <div
-        class="absolute top-0 left-0 will-change-transform rounded-full"
-        style="
+
+      {#each drawing.checkpoints || [] as checkpoint, i}
+        {#if i == data.checkpointsPassed || i == data.checkpointsPassed + 1}
+          {@const opacity = i == data.checkpointsPassed ? 0.5 : 0.3}
+          <div
+            class="absolute top-0 left-0 rounded-full bg-yellow-500"
+            style="width: {CHECKPOINT_RADIUS * 2}px; 
+              height: {CHECKPOINT_RADIUS * 2}px; 
+              opacity: {opacity}; 
+              transform: translate({checkpoint.x -
+              CHECKPOINT_RADIUS}px, {checkpoint.y - CHECKPOINT_RADIUS}px);"
+          ></div>
+        {/if}
+      {/each}
+      {#if data.drawing.boat}
+        <div
+          class="absolute top-0 left-0 will-change-transform rounded-full"
+          style="
         transform-origin: center;
-      transform: translate({data.boat.x - 12}px, {data.boat.y -
-          12}px) rotate({data.boat.angle + Math.PI / 2}rad) ;
+      transform: translate({drawing.boat!.x - 12}px, {drawing.boat!.y -
+            12}px) rotate({drawing.boat!.angle + Math.PI / 2}rad) ;
     "
-      >
-        <div class="">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 2L2 22L12 18L22 22L12 2Z"
-              fill="#1F2937"
-              stroke="#000"
-              stroke-width="2"
-              stroke-linejoin="round"
-            />
-          </svg>
+        >
+          <div class="">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2L2 22L12 18L22 22L12 2Z"
+                fill="#1F2937"
+                stroke="#000"
+                stroke-width="2"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
         </div>
-      </div>
+      {/if}
 
       <div
         class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-200"
@@ -126,6 +153,13 @@
         </div>
 
         <div class="space-y-1 font-mono text-sm text-gray-700">
+          <p>
+            Time: <span class="text-blue-600"
+              >{data.timeElapsed
+                ? (data.timeElapsed / 1000).toFixed(2)
+                : "0.00"}s</span
+            >
+          </p>
           <p>
             Speed: <span class="text-blue-600"
               >{Math.sqrt(
