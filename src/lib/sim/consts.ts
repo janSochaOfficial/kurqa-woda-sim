@@ -1,12 +1,20 @@
 export const FRAME_RATE = 60;
+
 export const ACCELERATION_FACTOR = 0.4;
 export const TURNING_FACTOR = 0.02;
 export const RESISTANCE_FACTOR = 0.01;
 export const WATER_RESISTANCE = 0.02;
-export const REDIRECTION_FACTOR = 0.5;
+export const REDIRECTION_FACTOR = 0.3;
 export const REDIRECTION_LOSS_FACTOR = 0.02;
-export const CHECKPOINT_RADIUS = 35;
+
 export const FIELD_WIDTH = 1100;
 export const FIELD_HEIGHT = 600;
+
+export const CHECKPOINT_RADIUS = 35;
 export const BOAT_RADIUS = 12;
 export const BUOY_RADIUS = 6;
+
+export const SPEED_CHELLAGE = {
+  ACCELERATION_DECAY_FACTOR: 0.03,
+  ACCELERATION_DECAY: 0.02,
+} as const;

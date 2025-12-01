@@ -1,6 +1,7 @@
 import { FRAME_RATE } from "./consts";
 import type { simData } from "./types/simData";
 import {
+  handleBuoysCollision,
   handleCheckpointCollision,
   handleDrawCalculations,
   handleFrameMath,
@@ -13,8 +14,9 @@ import type { userInputs } from "./types/userInputs";
 export const inFrameFunctions: frameHandler[] = [
   handleFrameMath,
   handleCheckpointCollision,
-  handleDrawCalculations,
+  handleBuoysCollision,
   handleTimers,
+  handleDrawCalculations,
 ];
 
 export async function frame(
@@ -25,7 +27,7 @@ export async function frame(
   onFrame: frameHandler,
   onFrameBeforeMath: boolean = false
 ): Promise<void> {
-  const [lastTime] = await Promise.all([last, timeout]);
+  const [lastTime, _] = await Promise.all([last, timeout]);
   const newTimeout = new Promise<void>((res) =>
     setTimeout(res, 1000 / FRAME_RATE)
   );
