@@ -1,13 +1,16 @@
 import { FRAME_RATE } from "./consts";
-import type { dataType } from "./dataType";
-import { handleCheckpointCollision } from "./handleCheckpointCollision";
-import { handleDrawCalculations } from "./handleDrawCalculations";
-import { handleFrameMath } from "./handleFrameMath";
-import { handleTimers } from "./handleTimers";
-import type { inFrameFunction } from "./inFrameFunction";
-import type { userInputs } from "./userInputs";
+import type { simData } from "./types/simData";
+import {
+  handleCheckpointCollision,
+  handleDrawCalculations,
+  handleFrameMath,
+  handleTimers,
+  type frameHandler,
+} from "./frameHandlers";
 
-export const inFrameFunctions: inFrameFunction[] = [
+import type { userInputs } from "./types/userInputs";
+
+export const inFrameFunctions: frameHandler[] = [
   handleFrameMath,
   handleCheckpointCollision,
   handleDrawCalculations,
@@ -15,30 +18,32 @@ export const inFrameFunctions: inFrameFunction[] = [
 ];
 
 export async function frame(
-  last: Promise<void>,
+  last: Promise<number>,
   timeout: Promise<void>,
-  data: dataType,
+  data: simData,
   inputs: userInputs,
-  onFrame: inFrameFunction,
+  onFrame: frameHandler,
   onFrameBeforeMath: boolean = false
 ): Promise<void> {
-  await Promise.all([last, timeout]);
+  const [lastTime] = await Promise.all([last, timeout]);
   const newTimeout = new Promise<void>((res) =>
     setTimeout(res, 1000 / FRAME_RATE)
   );
-  const currentFrame = new Promise<void>(async (res) => {
+  const currentFrame = new Promise<number>(async (res) => {
+    const startTime = performance.now();
     if (!data.startTime) {
       handleDrawCalculations(data, inputs);
-      res();
+      res(startTime);
       return;
     }
+    data.deltaTime = startTime - lastTime;
     const functionsStack = onFrameBeforeMath
       ? [onFrame, ...inFrameFunctions]
       : [...inFrameFunctions, onFrame];
 
     functionsStack.forEach((func) => func(data, inputs));
 
-    res();
+    res(startTime);
   });
   if (data.stop) return;
   frame(currentFrame, newTimeout, data, inputs, onFrame);

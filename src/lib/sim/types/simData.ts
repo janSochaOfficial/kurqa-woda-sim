@@ -1,4 +1,4 @@
-export type dataType = {
+export type simData = {
   boat: {
     x: number;
     y: number;
@@ -28,4 +28,5 @@ export type dataType = {
     height: number;
   };
   timeElapsed?: number;
+  deltaTime?: number;
 };

@@ -1,9 +1,9 @@
-import { FIELD_WIDTH } from "./consts";
-import type { dataType } from "./dataType";
-import type { userInputs } from "./userInputs";
+import { FIELD_WIDTH } from "../consts";
+import type { simData } from "../types/simData";
+import type { userInputs } from "../types/userInputs";
 
 export function handleDrawCalculations(
-  data: dataType,
+  data: simData,
   inputs: userInputs
 ): void {
   if (!data.fieldSize) return;

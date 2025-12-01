@@ -1,5 +1,5 @@
-import type { dataType } from "./dataType.js";
-export function handleBuoysCollision(data: dataType) {
+import type { simData } from "../types/simData.js";
+export function handleBuoysCollision(data: simData) {
   const BOAT_RADIUS = 12;
   const BUOY_RADIUS = 2.5;
   for (const buoy of data.buoys) {
